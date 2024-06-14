@@ -1,21 +1,11 @@
-from huggingface_hub import InferenceClient
-from llama_index.core import SimpleDirectoryReader
-from llama_index.core import VectorStoreIndex
-from llama_index.core import StorageContext, load_index_from_storage, ServiceContext
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.llms.huggingface import HuggingFaceInferenceAPI
 import json
 import logging
 import os
+from huggingface_hub import InferenceClient
+from llama_index.core import StorageContext, load_index_from_storage, ServiceContext, SimpleDirectoryReader, VectorStoreIndex
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.llms.huggingface import HuggingFaceInferenceAPI
 
-
-class EmbeddingModelWrapper:
-    def __init__(self, llm_client):
-        self.llm_client = llm_client
-
-    def embed(self, texts):
-        """Generate embeddings for a batch of texts using the LLM client."""
-        return self.llm_client(texts)
 
 
 class Librarian:
