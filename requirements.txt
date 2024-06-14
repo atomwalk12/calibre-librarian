@@ -1,7 +1,8 @@
-gradio==4.36.1
-huggingface_hub==0.20.3
-huggingface_hub==0.22.2
-huggingface_hub==0.23.3
-llama_index==0.10.44
+gradio
+huggingface_hub
+huggingface_hub
+huggingface_hub
+llama_index
 html2text
 ebooklib
+llama-index-embeddings-huggingface
