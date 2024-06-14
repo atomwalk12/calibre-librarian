@@ -2,7 +2,6 @@ import gradio as gr
 import argparse
 import logging
 from agent.librarian import Librarian
-from logging.handlers import RotatingFileHandler
 from gradio.blocks import Blocks
 
 
@@ -21,7 +20,6 @@ class GradioGUI(Blocks):
         :param user_input: message inserted by the user.
         """
         chat_history = self.agent.chat_history
-        self.logger.info(chat_history)
 
         # If it's the start of the conversation, include the system prompt
         if chat_history is None or len(chat_history) == 0:
@@ -30,6 +28,7 @@ class GradioGUI(Blocks):
         # Append the user message
         chat_history.append({"role": "user", "content": user_input})
 
+        # User friendly way to stream response 
         full_message = ""
         for token in self.agent.stream_response():
             yield token
@@ -44,6 +43,7 @@ class GradioGUI(Blocks):
         """
         demo = gr.ChatInterface(self.predict)
         demo.queue().launch()
+
 
 if __name__ == "__main__":
     # Arguments with sensible default values
@@ -62,6 +62,7 @@ if __name__ == "__main__":
         handlers=[logging.FileHandler("debug.log")],
     )
 
-    # Serve the server
+    # Serve the server 
     demo = GradioGUI(name=args.name, model_id=args.model_id, lib_path=args.lib_path)
     demo.launch()
+ 

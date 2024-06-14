@@ -1,7 +1,21 @@
 from huggingface_hub import InferenceClient
 from llama_index.core import SimpleDirectoryReader
+from llama_index.core import VectorStoreIndex
+from llama_index.core import StorageContext, load_index_from_storage, ServiceContext
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.llms.huggingface import HuggingFaceInferenceAPI
 import json
 import logging
+import os
+
+
+class EmbeddingModelWrapper:
+    def __init__(self, llm_client):
+        self.llm_client = llm_client
+
+    def embed(self, texts):
+        """Generate embeddings for a batch of texts using the LLM client."""
+        return self.llm_client(texts)
 
 
 class Librarian:
@@ -25,17 +39,19 @@ class Librarian:
         # User's name
         self.name = name
 
-        # Load all books from the library
-        self.books = self.load_books(lib_path)
-
         # Logger
         self.logger = logging.getLogger("librarian_logger")
 
         # Inference client definition
-        self.llm_client = InferenceClient(
-            model=model_id,
+        self.llm_client = HuggingFaceInferenceAPI(
+            model_name=model_id,
             timeout=120,
         )
+
+        # Store in vector store
+        self.query_engine = self.create_index(lib_path)
+
+
 
     def stream_response(self):
         """
@@ -44,7 +60,7 @@ class Librarian:
         logging.info(f"Chat history: {self.chat_history}")
         full_message = ""
         for token in self.llm_client.chat_completion(
-            self.chat_history, max_tokens=100, stream=True
+            self.chat_history, max_tokens=500, stream=True
         ):
             # Some magic used by the Gradio library to stream response to GUI
             full_message += token.choices[0].delta.content
@@ -53,7 +69,9 @@ class Librarian:
         return full_message
 
     def generate_response(self, inference_client: InferenceClient, prompt: dict):
-        """Function used for calling huggingface with streaming disabled"""
+        """
+        Function used for calling huggingface with streaming disabled.
+        """
         response = inference_client.chat_completion(
             json={
                 "inputs": prompt,
@@ -64,13 +82,49 @@ class Librarian:
         return json.loads(response.decode())[0]["generated_text"]
 
     def load_books(self, path):
-        """Used to recursively load all books found in the library"""
-        # loader = SimpleDirectoryReader(
-        #     input_dir=path,
-        #     recursive=True,
-        #     required_exts=[".epub"],
-        # )
+        """
+        Used to recursively load all books found in the library.
+        """
+        loader = SimpleDirectoryReader(
+            input_dir="./books",
+            recursive=True,
+            required_exts=[".epub"],
+        )
 
-        # documents = loader.load_data()
-        documents = []
+        documents = loader.load_data()
         return documents
+
+    def create_index(self, lib_path):
+        """
+        Used to create the index for RAG retrieval.
+        """
+        # Use a quick embedding model
+        embedding_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
+        service_context = ServiceContext.from_defaults(llm_predictor=self.llm_client, embed_model=embedding_model) 
+
+        # Use a light and fast vector store
+        if os.path.isdir('./index'):
+            # Load all books from the library
+            
+
+            # rebuild storage context
+            storage_context = StorageContext.from_defaults(persist_dir="./index")
+
+            # load index
+            index = load_index_from_storage(storage_context=storage_context, service_context=service_context, embedding_model='local')
+        else:
+            # Load the books
+            books = self.load_books(lib_path)
+
+            # create index
+            index = VectorStoreIndex.from_documents(
+                books,
+                embed_model=embedding_model,
+                service_context=service_context
+            )
+
+            # persist index for subsequent faster retrieval
+            index.storage_context.persist(persist_dir='./index',)
+
+        query_engine = index.as_query_engine(llm=self.llm_client)
+        return query_engine
