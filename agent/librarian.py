@@ -1,6 +1,11 @@
 import json
 import logging
 import os
+from typing import List
+from llama_index.core.base.llms.types import (
+    ChatMessage,
+    MessageRole,
+)
 from huggingface_hub import InferenceClient
 from llama_index.core import StorageContext, load_index_from_storage, ServiceContext, SimpleDirectoryReader, VectorStoreIndex
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
@@ -10,7 +15,7 @@ from llama_index.llms.huggingface import HuggingFaceInferenceAPI
 
 class Librarian:
     # Track chat history
-    chat_history = []
+    chat_history: List[ChatMessage] = []
 
     # Librarian system prompt
     system_prompt = """
@@ -28,6 +33,9 @@ class Librarian:
         """
         # User's name
         self.name = name
+
+        # Add system prompt to history
+        self.history_add(ChatMessage(content=self.system_prompt, role=MessageRole.SYSTEM))
 
         # Logger
         self.logger = logging.getLogger("librarian_logger")
@@ -48,6 +56,7 @@ class Librarian:
         The response from the LLM is streamed to the Gradio model via the yield keyword.
         """
         logging.info(f"Chat history: {self.chat_history}")
+
         full_message = ""
         for token in self.llm_client.chat_completion(
             self.chat_history, max_tokens=500, stream=True
@@ -57,6 +66,32 @@ class Librarian:
             yield full_message
 
         return full_message
+
+
+    def use_query_engine(self, user_message: ChatMessage):
+        """
+        Used via the query engine to retrieve information from the library.
+        """
+
+        # Add user message to history
+        self.history_add(user_message)
+
+        # Generate the response
+        response = self.query_engine.query(user_message.content)
+
+        # Add assistant message to history
+        self.history_add(ChatMessage(content=response, role=MessageRole.ASSISTANT))
+        
+        # The response for the query imbued with RAG context
+        return response
+
+
+    def history_add(self, message):
+        """
+        Add a given message to the chat history.
+        """
+        self.chat_history.append(message)
+
 
     def generate_response(self, inference_client: InferenceClient, prompt: dict):
         """
@@ -76,12 +111,14 @@ class Librarian:
         Used to recursively load all books found in the library.
         """
         loader = SimpleDirectoryReader(
-            input_dir="./books",
+            input_dir=path,
             recursive=True,
             required_exts=[".epub"],
         )
-
+        
         documents = loader.load_data()
+        
+        logging.info(f"Loaded documents: {documents}")
         return documents
 
     def create_index(self, lib_path):
@@ -90,7 +127,7 @@ class Librarian:
         """
         # Use a quick embedding model
         embedding_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
-        service_context = ServiceContext.from_defaults(llm_predictor=self.llm_client, embed_model=embedding_model) 
+        service_context = ServiceContext.from_defaults(llm=self.llm_client, embed_model=embedding_model) 
 
         # Use a light and fast vector store
         if os.path.isdir('./index'):
