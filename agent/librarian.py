@@ -9,8 +9,9 @@ from llama_index.core.base.llms.types import (
 from huggingface_hub import InferenceClient
 from llama_index.core import StorageContext, load_index_from_storage, ServiceContext, SimpleDirectoryReader, VectorStoreIndex
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.llms.huggingface import HuggingFaceInferenceAPI
-
+from llama_index.core.agent import ReActAgent
+from llama_index.core.tools import QueryEngineTool, ToolMetadata
+from clients.inference import inference_factory
 
 
 class Librarian:
@@ -20,10 +21,13 @@ class Librarian:
     # Librarian system prompt
     system_prompt = """
         You are a friendly and knowledgeable librarian assistant. I am a student eager to learn more about the books in your library. 
+        In your library you can find: The Brothers Karamazov by Fyodor Dostoyevsky, Pride and Prejudice by Jane Austen, Anna Karenina by Leo Tolstoy, War and Peace by Leo Tolstoy and Hamlet by William Shakespeare.
         Please provide insightful, concise and helpful information about the books in response to my questions.
+
+        What are the books stored in the library?
     """
 
-    def __init__(self, name, lib_path, model_id):
+    def __init__(self, inference_client, lib_path):
         """
         Initializes the Librarian, which represents a wrapper around the LLM.
 
@@ -31,8 +35,6 @@ class Librarian:
         :param lib_path: The path where the books are stored.
         :param model_id: The Huggingface model id.
         """
-        # User's name
-        self.name = name
 
         # Add system prompt to history
         self.history_add(ChatMessage(content=self.system_prompt, role=MessageRole.SYSTEM))
@@ -41,13 +43,11 @@ class Librarian:
         self.logger = logging.getLogger("librarian_logger")
 
         # Inference client definition
-        self.llm_client = HuggingFaceInferenceAPI(
-            model_name=model_id,
-            timeout=120,
-        )
+        self.llm_client = inference_factory(inference_client)
 
         # Store in vector store
         self.query_engine = self.create_index(lib_path)
+        self.agent = self.create_agent(self.query_engine)
 
 
 
@@ -74,10 +74,20 @@ class Librarian:
         """
 
         # Add user message to history
-        self.history_add(user_message)
+        # self.history_add(user_message)
 
         # Generate the response
-        response = self.query_engine.query(user_message.content)
+        logging.info(f"{self.chat_history}")
+        
+        # Todo remove these lines
+        # response = self.query_engine.query(user_message.content)
+        # response = self.llm_client.chat(self.chat_history)
+
+        response = self.agent.stream_chat(user_message.content)
+        response.print_response_stream()
+        logging.info(f"""Question: {user_message.content}\n
+                     Response: {response=}\n
+                     Chat history: {self.chat_history=}\n""")
 
         # Add assistant message to history
         self.history_add(ChatMessage(content=response, role=MessageRole.ASSISTANT))
@@ -153,5 +163,34 @@ class Librarian:
             # persist index for subsequent faster retrieval
             index.storage_context.persist(persist_dir='./index',)
 
-        query_engine = index.as_query_engine(llm=self.llm_client)
+        query_engine = index.as_query_engine(llm=self.llm_client, similarity_top_k=5, verbose=True)
         return query_engine
+
+
+    def create_agent(self, query_engine):
+        """
+        Creates a ReAct agent with the aim to use RAG retrieval tools to answer questions.
+        This way the data is bundled across different query engines, yielding focused context.
+        """
+        # Define the engines with a short description describing when to use the tool
+        query_engine_tools = [
+            QueryEngineTool(
+                query_engine=query_engine,
+                metadata=ToolMetadata(
+                    name="Hamlet",
+                    description=(
+                        "Provides information about the book Hamlet by William Shakespeare. "
+                        "Use a detailed plain text question as input to the tool."
+                    ),
+                ), 
+            ),
+        ]
+
+        # Generates the agent to use tools and the desired llm client
+        agent = ReActAgent.from_tools(
+            query_engine_tools,
+            llm=self.llm_client,
+            verbose=True,
+            request_timeout=600
+        )
+        return agent
