@@ -6,3 +6,4 @@ llama_index
 html2text
 ebooklib
 llama-index-embeddings-huggingface
+llama-hub
