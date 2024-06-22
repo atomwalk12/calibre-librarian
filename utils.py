@@ -8,8 +8,12 @@ def split_text(input_text):
 
     param: input_text: the code 
     """
+    # Remove ASCI color characters
+    input_text = remove_color(input_text)
+
     # Define the pattern to match 'Thought:' or 'Observation:' followed by text.
-    pattern = r"(Thought:(.|\n)*?\})\s*|(Observation:.*?\.)\s*"
+    pattern = r'(?s)(Thought:(.|\n)*?(\}|(?=Answer)))\s*|(Observation:.*?.*?(?=Thought))\s*'
+    # pattern = r"(Thought:(.|\n)*?\})\s*|(Observation:.*?\.)\s*"
     matches = re.findall(pattern, input_text)
 
     # Since the list previously retrieved is made of tuples, it must be flattened.
@@ -42,6 +46,11 @@ def find_pdfs(root_dir, extension):
 
     return books
 
+
+def remove_color(text):
+    # ANSI escape sequences for colors have the pattern: \033[ ... m
+    # Use re.sub() to replace these patterns with an empty string
+    return re.sub(r'\033\[[0-9;]*m', '', text)
 
 
 def trim_to_num_sentences(text, num_sentences):

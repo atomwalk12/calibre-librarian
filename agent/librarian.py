@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 from contextlib import redirect_stdout
@@ -7,7 +6,6 @@ from pathlib import Path
 from typing import List
 
 from clients.inference import inference_factory
-from huggingface_hub import InferenceClient
 from llama_index.core import (
     ServiceContext,
     SimpleDirectoryReader,
@@ -26,7 +24,6 @@ from llama_index.core.tools import FunctionTool, QueryEngineTool, ToolMetadata
 from llama_index.core.vector_stores.types import VectorStoreQueryMode
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from utils import find_pdfs, split_text, trim_to_num_sentences
-
 
 
 class Librarian:
@@ -238,7 +235,6 @@ class Librarian:
                 # Store the index to create the citation engine
                 indexes.append(index)
 
-        # query_engine = index.as_query_engine(llm=self.llm_client, similarity_top_k=5, verbose=True)
         query_engines = []
 
         for index in indexes:
