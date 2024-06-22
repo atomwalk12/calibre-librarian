@@ -28,6 +28,7 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from utils import find_pdfs, split_text, trim_to_num_sentences
 
 
+
 class Librarian:
     """
     Librarian acts as a wrapper around the agent used to retrieve data (main class).
@@ -62,8 +63,8 @@ class Librarian:
         self.books = find_pdfs(self.lib_path, extension)
 
         # Store in vector store
-        self.query_engines = self.create_index(lib_path, extension)
-        self.agent = self.create_agent(self.query_engines)
+        query_engines = self.create_index(lib_path, extension)
+        self.agent = self.create_agent(query_engines)
 
     def stream_response(self):
         """
@@ -78,66 +79,71 @@ class Librarian:
             yield full_message
 
         return full_message
+    
 
-    def use_query_engine(self, user_message: str, history):
+    def use_query_engine(self, user_message: str, history: List[str]):
         """
         Used via the query engine to retrieve information from the library.
+
+        param: user_message: str - The user's message to be processed by the LLM
+        param: history: list - The current conversation history
         """
 
         # Synchronize chat history with Gradio history
         while len(self.chat_history) > len(history) * 2:
             self.chat_history.pop()
 
-        # Todo remove these lines
-        # response = self.query_engine.query(user_message.content)
-        # response = self.llm_client.chat(self.chat_history)
+        # Prompt the agent given the input
         with StringIO() as buffer, redirect_stdout(buffer):
             response = self.agent.chat(user_message, chat_history=self.chat_history)
-
             text = buffer.getvalue()
 
+        # Print the output of the agent
         print(text)
 
+        # Yield the output to the agent when queried to list available books
         display_tool_user = False
         for tool in response.sources:
             if tool.tool_name == self.display_books.__name__:
                 display_tool_user = True
                 yield response.response
 
+        # If the agent did not use the display books tool, then a show book results
         if not display_tool_user:
             thoughts, observations = split_text(text)
+
             citation_idx = 0
             for idx in range(len(thoughts)):
+
+                # Discard messages that were the result of parsing errors
                 if idx < len(observations) and "Error" in observations[idx]:
                     continue
 
-                # print thought
+                # Print current thought
                 yield "\n\n" + thoughts[idx]
 
                 # Print citations
                 for _ in range(self.similarity_top_k):
+
+                    # Some tools do not require RAG operations and as a result citation index may be out of bounds
                     if citation_idx >= len(response.source_nodes):
                         break
 
-                    node_text = response.source_nodes[citation_idx].node.get_text()
-                    yield "\n\n" + node_text
-                    logging.error(f"{node_text}\n")
+                    yield "\n\n" + response.source_nodes[citation_idx].node.get_text()
                     citation_idx += 1
 
+                # In some cases an observation may include redundant text due to parsing errors
                 if idx >= len(observations):
                     continue
 
-                # print observations
                 yield "\n\n" + observations[idx]
 
+            # When using the HF api trim for at most 4 sentences, since chat functionality is not supported
             if self.using_hf:
                 yield "\n\n" + trim_to_num_sentences(response.response, 4)
             else:
                 yield "\n\n" + response.response
 
-        # logging.info(f"""Question: {user_message.content}\n
-        #             Response: {response=}\n
-        #             Chat history: {self.chat_history=}\n""")
 
         # Add user and assistant messages to history
         self.history_add(ChatMessage(content=user_message, role=MessageRole.USER))
@@ -148,28 +154,21 @@ class Librarian:
         # The response for the query imbued with RAG context
         return response
 
-    def history_add(self, message):
+    def history_add(self, message: ChatMessage):
         """
         Add a given message to the chat history.
+
+        param: message (ChatMessage) - The message to add to the chat history
         """
         self.chat_history.append(message)
 
-    def generate_response(self, inference_client: InferenceClient, prompt: dict):
-        """
-        Function used for calling huggingface with streaming disabled.
-        """
-        response = inference_client.chat_completion(
-            json={
-                "inputs": prompt,
-                "parameters": {"max_new_tokens": 1000},
-                "task": "text-generation",
-            },
-        )
-        return json.loads(response.decode())[0]["generated_text"]
 
     def load_book(self, path, ext):
         """
         Used to recursively load all books found in the library.
+
+        param: path (str) - The path to the library of books
+        param: ext (str) - The extension of the files to load
         """
         loader = SimpleDirectoryReader(
             input_files=[path],
@@ -181,7 +180,7 @@ class Librarian:
         logging.info(f"Loaded documents: {documents}")
         return documents
 
-    def create_index(self, lib_path, ext):
+    def create_index(self, lib_path:str , ext: str):
         """
         Used to create the index for RAG retrieval.
         """
@@ -220,7 +219,7 @@ class Librarian:
         else:
             for book in self.books:
                 cur_docs = self.load_book(
-                    f"{lib_path}/{book['author']}/{book['name']}", ".pdf"
+                    f"{lib_path}/{book['author']}/{book['name']}", ext
                 )
 
                 # create index
@@ -260,11 +259,10 @@ class Librarian:
         """
         Creates a ReAct agent with the aim to use RAG retrieval tools to answer questions.
         This way the data is bundled across different query engines, yielding focused context.
+
+        param: query_engines: List of query engines to use to answer questions
         """
 
-        # Todo Wikipedia tool
-        # arxiv_spec = ArxivToolSpec()
-        # arxiv_tool = arxiv_spec.to_tool_list()[0]
         citation_engines = []
         for idx in range(len(query_engines)):
             book = self.books[idx]
@@ -291,8 +289,7 @@ class Librarian:
                     "There is no input to the tool."
                 ),
                 return_direct=True,
-            ),
-            # arxiv_tool,
+            )
         ] + citation_engines
 
         # Generates the agent to use tools and the desired llm client
@@ -304,6 +301,7 @@ class Librarian:
             max_iterations=25,
         )
         return agent
+
 
     def display_books(self):
         """

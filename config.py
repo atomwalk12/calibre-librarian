@@ -1,7 +1,7 @@
 CONFIG = {
     'HF': {
         'model_name': "meta-llama/Meta-Llama-3-8B-Instruct",
-        'timeout': 600,
+        'timeout': 6000,
         'task': 'complete',
         'num_output': 256,
         'context_window': 8192,
@@ -14,9 +14,9 @@ CONFIG = {
         'repetition_penalty': 1.2
     },
     'Ollama': {
-        # alternative: 'llama3:70b-instruct'
-        'model': 'llama3:8b-instruct-fp16', 
-        'request_timeout': 600,
+        'model': 'llama3:70b-instruct',
+        # 'model': 'llama3:8b-instruct-fp16', 
+        'request_timeout': 6000,
         'context_window': 8192,
         'temperature': 0.1
     }
