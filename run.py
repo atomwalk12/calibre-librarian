@@ -28,8 +28,8 @@ demo = gr.ChatInterface(predict)
 # Arguments with sensible default values
 parser = argparse.ArgumentParser()
 parser.add_argument("--extension", type=str, default=".pdf")
-parser.add_argument("--inference_client", type=str, default="HF")
-parser.add_argument("--lib_path", type=str, default="./books")
+parser.add_argument("--inference-client", type=str, default="HF")
+parser.add_argument("--lib-path", type=str, default="./books")
 args, unknown = parser.parse_known_args()
 
 

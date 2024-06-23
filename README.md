@@ -19,7 +19,7 @@ Below are some properties of the project:
 
 ## Building the project
 ### Ollama
-If you'd like to use the local model, follow the instruction [here](https://github.com/ollama/ollama) to install Ollama.
+If you'd like to use the local model, follow the instruction [here](https://github.com/ollama/ollama) to install Ollama. The project is currently configured to work with Llama 3 8b and Llama 3 70b (check [config.py](config.py)).
 
 ### Huggingface API
 If you would like to use a cloud model, you don't need to do anything else.
