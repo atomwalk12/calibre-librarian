@@ -8,8 +8,7 @@ def inference_factory(inference_client):
     """Factory Method"""
     providers = {
         "Ollama": Ollama,  # Placeholder if 'Ollama' service class is to be implemented
-        "HF": HuggingFaceInferenceAPI,
-        "OpenAI": None,  # Placeholder if 'OpenAI' service class is to be implemented
+        "HF": HuggingFaceInferenceAPI
     }
 
     provider_class = providers.get(inference_client)
