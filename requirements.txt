@@ -1,9 +1,10 @@
 gradio
 huggingface_hub
-huggingface_hub
-huggingface_hub
 llama_index
 html2text
 ebooklib
 llama-index-embeddings-huggingface
 llama-hub
+llama-index
+llama-index-llms-huggingface
+llama-index-llms-ollama

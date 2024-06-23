@@ -28,7 +28,7 @@ demo = gr.ChatInterface(predict)
 # Arguments with sensible default values
 parser = argparse.ArgumentParser()
 parser.add_argument("--extension", type=str, default=".pdf")
-parser.add_argument("--inference_client", type=str, default="Ollama")
+parser.add_argument("--inference_client", type=str, default="HF")
 parser.add_argument("--lib_path", type=str, default="./books")
 args, unknown = parser.parse_known_args()
 
@@ -49,4 +49,4 @@ librarian = Librarian(
 )
 
 if __name__ == "__main__":
-    demo.queue().launch(share=True)
+    demo.queue().launch()
