@@ -6,12 +6,12 @@ https://github.com/atomwalk12/calibre-librarian/assets/146588815/13c8e649-4376-4
 ## Features
 Below are some properties of the project:
 
- - **Remote and Local LLMs.** the agent works both with local and cloud LLMs.
+ - **Remote and Local LLMs.** The agent works both with local and cloud LLMs.
    - **HuggingFace API.** The cloud models leverage the HuggingFace free web API to answer queries, which means that the library is also usable without local hosting. The library uses by default the Llama 3 8b instruct model.
    - **Ollama.** The local models are hosted via the Ollama backend. The local models can be more powerful which means that the quality of the results tends to be better. Possible Ollama models are [listed here](https://ollama.com/library).
  - **Prompts leveraging book context.** The agent answers a series of questions by retrieving information repeatedly from the corresponding book. The information is used to improve the quality of the answer.
    - **Citations.** They are displayed along the answer, together with partial answers, which are used to provide a more thorough and informed response.
- - **Available books.** It is possible to query the agent for the available books in the library. Currently, the project provides indices for three books:
+ - **Available books.** It is possible to query the agent for the available books but new ones can be added - this requires to rebuild the index. Currently, the project provides indices for three books:
    - The Little Prince by Antoine de Saint-Exupéry.
    - Ethics by Baruch Spinoza.
    - The Picture of Dorian Gray by Oscar Wilde.
@@ -43,3 +43,6 @@ For HuggingFace
 ```
 
 The model to use is configurable from [config.py](config.py).
+
+### Adding new books
+To add new books add another pdf file to the [books](books/) directory. They must be placed in a directory representing the author name, with the name of the book as individual files.
