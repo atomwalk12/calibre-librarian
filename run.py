@@ -1,4 +1,4 @@
-from agent.librarian import Librarian
+from lib.librarian import Librarian
 
 import gradio as gr
 import argparse

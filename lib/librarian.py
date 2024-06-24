@@ -5,7 +5,7 @@ from io import StringIO
 from pathlib import Path
 from typing import List
 
-from clients.inference import inference_factory
+from lib.inference import inference_factory
 from llama_index.core import (
     ServiceContext,
     SimpleDirectoryReader,
@@ -23,7 +23,7 @@ from llama_index.core.query_engine import CitationQueryEngine
 from llama_index.core.tools import FunctionTool, QueryEngineTool, ToolMetadata
 from llama_index.core.vector_stores.types import VectorStoreQueryMode
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from utils import find_pdfs, split_text, trim_to_num_sentences
+from lib.utils import find_pdfs, split_text, trim_to_num_sentences
 
 
 class Librarian:
