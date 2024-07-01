@@ -46,3 +46,15 @@ The model to use is configurable from [config.py](config.py).
 
 ### Adding new books
 To add new books add another pdf file to the [books](books/) directory. They must be placed in a directory representing the author name, with the name of the book as individual files.
+Once the index is generated, remove the 📁Index folder to regenerate it.
+
+For example the directory structure should look something like this:
+```
+📁 books
+├─ 📚 Antoine de Saint Exupery
+│  └─ 🗒️ Little Prince.pdf
+├─ 📚 Baruch Spinoza
+│  └─ 🗒️ Ethics.pdf
+└─ 📚 Oscar Wilde
+   └─ 🗒️ The Picture of Dorian Gray.pdf
+```
