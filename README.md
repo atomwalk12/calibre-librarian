@@ -45,7 +45,7 @@ For HuggingFace
 The model to use is configurable from [config.py](config.py).
 
 ### Adding new books
-To add new books add another pdf file to the [books](books/) directory. They must be placed in a directory representing the author name, with the name of the book as individual files.
+To add new books, add pdf files to the [books](books/) directory. Each file must be placed in a directory named after the author, with each individual file name corresponding to the title of book.
 Once the index is generated, remove the 📁Index folder to regenerate it.
 
 For example the directory structure should look something like this:
