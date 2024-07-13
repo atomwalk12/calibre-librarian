@@ -1,5 +1,5 @@
 # Librarian LLM Agent
-LLM powered agent for answering questions about various books stored in a local library. 
+LLM powered agent for answering questions about books stored in a local library. 
 
 Check out the 4-minute video explanation [here](https://www.youtube.com/watch?v=63E1ebuUNcs) and paper [here](docs/report.pdf).
 
