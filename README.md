@@ -1,6 +1,9 @@
 # Librarian LLM Agent
-LLM powered agent for answering questions about various books stored in a local library. Below is a 1 minute presentation showcasing the agent answering a total of 9 questions about 3 books, 3 questions for each individual book.
+LLM powered agent for answering questions about various books stored in a local library. A short video describing the project can be found (here)[https://www.youtube.com/watch?v=osW5LUMoZh4]. Also, more information contained in the report is available under (docs/report.pdf)[docs/report.pdf].
 
+![poster](https://github.com/user-attachments/assets/467c1225-db01-4912-a575-f674269c62d0)
+
+Below is a 1 minute presentation showcasing the agent answering a total of 9 questions about 3 books, 3 questions for each individual book.
 https://github.com/atomwalk12/calibre-librarian/assets/146588815/13c8e649-4376-4cf5-a0d5-9ff8ab5af996
 
 ## Features
