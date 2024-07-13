@@ -6,7 +6,7 @@ Check out the 4-minute video explanation [here](https://www.youtube.com/watch?v=
 
 ![poster](https://github.com/user-attachments/assets/467c1225-db01-4912-a575-f674269c62d0)
 
-Below is a 1 minute presentation showcasing the agent answering a total of 9 questions about 3 books, 3 questions for each individual book.
+Demo presentation answering 9 questions about 3 books.
 
 https://github.com/user-attachments/assets/00f426fd-d46a-46ad-86d5-8f6622f39d58
 
