@@ -1,5 +1,5 @@
 # Librarian LLM Agent
-LLM powered agent for answering questions about various books stored in a local library. A short video describing the project can be found [here](https://www.youtube.com/watch?v=osW5LUMoZh4). Also, more information can be found in the report, which is available under [docs/report.pdf](docs/report.pdf).
+LLM powered agent for answering questions about various books stored in a local library. A short video describing the project can be found [here](https://www.youtube.com/watch?v=63E1ebuUNcs). Also, more information can be found in the report, which is available under [docs/report.pdf](docs/report.pdf).
 
 
 ![poster](https://github.com/user-attachments/assets/467c1225-db01-4912-a575-f674269c62d0)
